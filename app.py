@@ -2,17 +2,12 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-stores = [
-    {
-        "name": "My store",
-        "items": [
-            {
-                "name": "Chair",
-                "price": 15.99
-            }
-        ]
-    }
-]
+
+stores = {}
+items = {
+    1:{},
+    2:{}
+}
 
 @app.route("/")
 def home():
