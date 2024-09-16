@@ -1,13 +1,14 @@
+import uuid
 from flask import Flask, request
+from db import items, stores
+
 
 app = Flask(__name__)
 
 
-stores = {}
-items = {
-    1:{},
-    2:{}
-}
+
+
+items.values()
 
 @app.route("/")
 def home():
@@ -15,28 +16,49 @@ def home():
 
 @app.get("/store")
 def get_stores():
-    return {"stores": stores}
+    return {"stores": list(stores.values())}
 
 
 @app.post("/store")
 def create_store():
-    request_data = request.get_json()
-    print(f"{request_data} \n\n\n")
-    new_store = {"name": request_data["name"], "items": []}
-    stores.append(new_store)
+    store_data = request.get_json()
+    store_id = uuid.uid4().hex
+    # print(f"{request_data} \n\n\n")
+    new_store = {**store_data, "id": store_id}
+    stores[store_id] = new_store
     return new_store, 201
 
 
-@app.post("/store/<string:name>/item")  # Crocodile tags are for dynamic segments in a url  data type: variable name
-def create_item(name: str):
-    request_data = request.get_json()
-    for obj in stores:
-        if name == obj["name"]:
-            new_item = {"name": request_data["name"], "price": request_data["cost"]}
-            obj["items"].append(new_item)
-            #  return new_item, 201, "Successfully achieved"
-            return new_item, 201
+@app.post("/item")  # Crocodile tags are for dynamic segments in a url  data type: variable name
+def create_item():
+    item_data = request.get_json()
+    if item_data["store_id"] not in stores:
+        # In case item is not there
+        return {"Message": "Store NOT Found"}, 404
+    else:
+        item_id = uuid.uid4().hex
+        item = {**item_data, "id": item_id}
+        items[item_id] = item
 
-    # In case we don't find the name
-    return "Message: We didn't find the store", 404
+        return item, 201
 
+
+@app.get("/item")
+def get_all_items():
+    return {"items": list(items.values())}
+
+
+@app.get("/store/<string:store_id>")
+def get_store(store_id):
+    try:
+        return stores[store_id]
+    except KeyError:
+        return {"message": "Id not found."}, 404
+
+
+@app.get("/item/<string:item_id>")
+def get_item(name):
+    try:
+        return item[item_id]
+    except KeyError:
+        return {"Message": "Item NOT Found"}, 404
